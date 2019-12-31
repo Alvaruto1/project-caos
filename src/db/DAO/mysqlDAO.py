@@ -3,40 +3,50 @@ from flask import current_app
 import src.db.DAO.DAO as DAO
 from mysql.connector import Error
 from src.webapp.models.user import User
+from src.webapp.models.token import Token
 
 class MysqlDAOUser(DAO.UserDAO):
 
     table = "users"
-    columns = ['']
     
     def __init__(self,connection):
         self.connection=connection 
     
-    def create(self,user):       
+    def create(self,user): 
+
+        # generate token
+        try:
+            mT = DAOManagerMysql()
+            if not mT.do(mT.TOKEN, mT.CREATE, user.token):
+                raise Error('no create token')
+                return False
+            mT.commit()
+            #mT.create(user.token)
+            idToken = mT.do(mT.TOKEN, mT.LAST_ID_TOKEN)     
+            
+        except Error as e:
+            print('Error DAOUser create 1: {}'.format(e)) 
+            return False     
+        
 
         try:
-            birthDate = datetime.datetime.strptime(user.birthDate, '%d/%m/%y')
-        except (ValueError, AttributeError) as e:
-            print('Error: {}'.format(e))
-            return False
-
-        try:
-            if user.name == '' or user.lastName == '' or user.email == '':
+            if user.email == '' or user.password == '':
                 raise Error('empty fields')
                 #print('Error: empty fields')
                 return False
+
         except Error as e:
-            print('Error: {}'.format(e))
-            raise Exception('error')
+            print('Error DAOUser create 2: {}'.format(e))            
+            return False
             
         cursor = self.connection.cursor()        
-        dataUser = (user.name, user.lastName, birthDate, user.email)
-        sql = """ INSERT INTO {} (name, lastName, birthDate, email) VALUES(?,?,?,?);""".format(self.table)    
+        dataUser = (user.email, user.password, idToken,)
+        sql = """ INSERT INTO {} (email, password, idtoken) VALUES(%s,%s,%s);""".format(self.table)    
         
         try: 
             cursor.execute(sql, dataUser)
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOUser create 3: {}'.format(e))
             return False
 
         #self.connection.commit()
@@ -45,7 +55,7 @@ class MysqlDAOUser(DAO.UserDAO):
     def delete(self,idUser):
         
         cursor = self.connection.cursor()
-        sql = """ DELETE FROM {} WHERE id = '{}';""".format(self.table, idUser)
+        sql = """ DELETE FROM {} WHERE idusers = '{}';""".format(self.table, idUser)
         
         try:
             cursor.execute(sql)
@@ -54,7 +64,7 @@ class MysqlDAOUser(DAO.UserDAO):
                 #print('Error: no found row, no deleted')    
                 return False    
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOUser delete: {}'.format(e))
             return False
         
         #self.connection.commit()
@@ -65,30 +75,30 @@ class MysqlDAOUser(DAO.UserDAO):
         try:
             birthDate = datetime.datetime.strptime(user.birthDate, '%d/%m/%y')
         except (ValueError, AttributeError) as e:
-            print('Error: {}'.format(e))
+            print('Error DAOUser update: {}'.format(e))
             return False
 
         try:
-            if user.name == '' or user.lastName == '' or user.email == '':
+            if user.email == '' or user.password == '':
                 raise Error('empty fields')
                 #print('Error: empty fields')
                 return False
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOUser update: {}'.format(e))
             return False        
         
         cursor = self.connection.cursor()
-        dataUser = (user.name, user.lastName, birthDate, user.email, user.id)
-        sql = """ UPDATE {} SET name=?, lastName=?, birthDate=?, email=? WHERE id=?;""".format(self.table)
+        dataUser = (user.email, user.password, user.token,)
+        sql = """ UPDATE {} SET email=%s, password=%s, idtoken=%s WHERE idusers=%s;""".format(self.table)
 
         try:
             cursor.execute(sql,dataUser)
             if cursor.rowcount == 0:
-                raise Error(' no found row, no updated3')
+                raise Error(' no found row, no updated')
                 #print('Error: no found row, no updated')    
                 return False 
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOUser update: {}'.format(e))
             return False               
 
         return True
@@ -97,12 +107,12 @@ class MysqlDAOUser(DAO.UserDAO):
     def getOne(self,idUser):
         
         cursor = self.connection.cursor()
-        sql = """ SELECT * FROM {} WHERE id = '{}';""".format(self.table, idUser)
+        sql = """ SELECT * FROM {} WHERE email = '{}';""".format(self.table, idUser)
         
-        try:
+        try:            
             cursor.execute(sql)
         except Error as e:
-            print('Error: {}'.format(e))            
+            print('Error DAOUser getOne: {}'.format(e))            
             return False
 
         user = None
@@ -111,20 +121,23 @@ class MysqlDAOUser(DAO.UserDAO):
         if query:
             user = self.queryToObject(query)
         else:
-            print('Error: no found user')
+            print('Error DAOUser getOne: no found user')
         
         return user
     
     
-    def getAll(self):
+    def getAll(self,filter):
         
         cursor = self.connection.cursor()
-        sql = """ SELECT * FROM {};""".format(self.table)
+
+        filterWhere = filter == None if '' else 'WHERE {}'
+
+        sql = """ SELECT * FROM {} {};""".format(self.table,filterWhere)
         
         try:
             cursor.execute(sql)
         except Error as e:
-            print('Error: {}'.format(e))            
+            print('Error DAOUser getAll: {}'.format(e))            
             return False
 
         rows = cursor.fetchall()
@@ -136,61 +149,82 @@ class MysqlDAOUser(DAO.UserDAO):
         return users
 
     
-    def queryToObject(self,query):
+    def _getOneByToken(self, idToken):
+
+        cursor = self.connection.cursor()
+        sql = "SELECT * FROM users WHERE idtoken='{}'".format(idToken)
+        cursor.execute(sql)
+        query = cursor.fetchone()
+
+        if query == None:            
+            return None
+
+        return self.queryToObject(query)
+
+
+    def existToken(self, token):
+
+        cursor = self.connection.cursor()
+        sql = "SELECT * FROM tokens WHERE value = '{}'".format(token)
+        cursor.execute(sql)
+        query = cursor.fetchone()
+
+        if query == None:
+            return None
         
+        user = self._getOneByToken(query[0])
+        return user
+
+    
+    def queryToObject(self,query):
+             
         idUser = query[0]
-        name = query[1]
-        lastName = query[2]
-        birthDate = query[3]
-        email = query[4]
-        user = User(name,lastName,birthDate,email)
-        user.id = idUser
+        email = query[1]
+        password = query[2]
+        idtoken = query[3]
+        mT = DAOManagerMysql()
+        token = mT.do(mT.TOKEN, mT.GET_ONE, idtoken)
+               
+        user = User(email, password, token, idUser)        
 
         return user 
 
 
 class MysqlDAOToken(DAO.TokenDAO):
 
-    table = "tokens"
-    columns = ['']
+    table = "tokens"    
     
     def __init__(self,connection):
         self.connection=connection 
     
-    def create(self,user):       
+    def create(self,token):  
 
         try:
-            birthDate = datetime.datetime.strptime(user.birthDate, '%d/%m/%y')
-        except (ValueError, AttributeError) as e:
-            print('Error: {}'.format(e))
-            return False
-
-        try:
-            if user.name == '' or user.lastName == '' or user.email == '':
+            if token.value == '' or token.date is None:
                 raise Error('empty fields')
                 #print('Error: empty fields')
                 return False
         except Error as e:
-            print('Error: {}'.format(e))
-            raise Exception('error')
+            print('Error DAOToken create: {}'.format(e))
+            return False
             
-        cursor = self.connection.cursor()        
-        dataUser = (user.name, user.lastName, birthDate, user.email)
-        sql = """ INSERT INTO {} (name, lastName, birthDate, email) VALUES(?,?,?,?);""".format(self.table)    
+        self.cursor = self.connection.cursor()        
+        datatoken = (token.value, token.date)
+        sql = """ INSERT INTO {} (value, date) VALUES(%s,%s);""".format(self.table)    
         
         try: 
-            cursor.execute(sql, dataUser)
+            self.cursor.execute(sql, datatoken)
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOToken create: {}'.format(e))
             return False
 
         #self.connection.commit()
         return True
     
-    def delete(self,idUser):
+    def delete(self,idtoken):
         
         cursor = self.connection.cursor()
-        sql = """ DELETE FROM {} WHERE id = '{}';""".format(self.table, idUser)
+        sql = """ DELETE FROM {} WHERE idtokens = '{}';""".format(self.table, idtoken)
         
         try:
             cursor.execute(sql)
@@ -199,99 +233,97 @@ class MysqlDAOToken(DAO.TokenDAO):
                 #print('Error: no found row, no deleted')    
                 return False    
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOToken delete: {}'.format(e))
             return False
         
         #self.connection.commit()
         return True
     
-    def update(self,user):
+    def update(self,token):        
 
         try:
-            birthDate = datetime.datetime.strptime(user.birthDate, '%d/%m/%y')
-        except (ValueError, AttributeError) as e:
-            print('Error: {}'.format(e))
-            return False
-
-        try:
-            if user.name == '' or user.lastName == '' or user.email == '':
+            if token.value == '' or token.date is None:
                 raise Error('empty fields')
                 #print('Error: empty fields')
                 return False
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOToken update: {}'.format(e))
             return False        
         
-        cursor = self.connection.cursor()
-        dataUser = (user.name, user.lastName, birthDate, user.email, user.id)
-        sql = """ UPDATE {} SET name=?, lastName=?, birthDate=?, email=? WHERE id=?;""".format(self.table)
-
+        cursor = self.connection.cursor() 
+            
+        datatoken = (token.value, token.date)
+        sql = """ UPDATE {} SET value=%s, date=%s WHERE idtokens='{}';""".format(self.table,token.id)
+        
         try:
-            cursor.execute(sql,dataUser)
+            cursor.execute(sql,datatoken)
             if cursor.rowcount == 0:
-                raise Error(' no found row, no updated3')
+                raise Error('no found row, no updated3')
                 #print('Error: no found row, no updated')    
                 return False 
         except Error as e:
-            print('Error: {}'.format(e))
+            print('Error DAOToken update: {}'.format(e))
             return False               
 
         return True
     
     
-    def getOne(self,idUser):
+    def getOne(self,idtoken):
         
         cursor = self.connection.cursor()
-        sql = """ SELECT * FROM {} WHERE id = '{}';""".format(self.table, idUser)
+        sql = """ SELECT * FROM {} WHERE idtokens = '{}';""".format(self.table, idtoken)
         
         try:
             cursor.execute(sql)
         except Error as e:
-            print('Error: {}'.format(e))            
+            print('Error DAOToken getOne: {}'.format(e))            
             return False
 
-        user = None
+        token = None
         query = cursor.fetchone()        
 
         if query:
-            user = self.queryToObject(query)
+            token = self.queryToObject(query)
         else:
-            print('Error: no found user')
+            print('Error DAOToken getOne: no found token')
         
-        return user
+        return token
     
     
-    def getAll(self):
+    def getAll(self,filter):
         
         cursor = self.connection.cursor()
-        sql = """ SELECT * FROM {};""".format(self.table)
+        
+        filterWhere = filter == None if '' else 'WHERE {}' 
+        
+        sql = """ SELECT * FROM {} {};""".format(self.table,filterWhere)
         
         try:
             cursor.execute(sql)
         except Error as e:
-            print('Error: {}'.format(e))            
+            print('Error DAOToken getAll: {}'.format(e))            
             return False
 
         rows = cursor.fetchall()
-        users = []
+        tokens = []
         for row in rows:
-            user = self.queryToObject(row)
-            users.append(user)
+            token = self.queryToObject(row)
+            tokens.append(token)
         
-        return users
+        return tokens    
+
+    def getLastIdToken(self):
+        return self.cursor.lastrowid
 
     
     def queryToObject(self,query):
         
-        idUser = query[0]
-        name = query[1]
-        lastName = query[2]
-        birthDate = query[3]
-        email = query[4]
-        user = User(name,lastName,birthDate,email)
-        user.id = idUser
+        idtoken = query[0]
+        value = query[1]
+        date = query[2]        
+        token = Token(value,date,idtoken)       
 
-        return user
+        return token
     
     
 
@@ -312,9 +344,22 @@ class DAOManagerMysql(DAO.DAOManager):
                         'update':super().update,
                         'delete':super().delete,
                         'getOne':super().getOne,
-                        'getAll':super().getAll
+                        'getAll':super().getAll,
+                        'existToken': super().existToken,
                     }
                     ,super().userDAO,MysqlDAOUser
+                ],
+            1:
+                [
+                    {
+                        'create':super().create,
+                        'update':super().update,
+                        'delete':super().delete,
+                        'getOne':super().getOne,
+                        'getAll':super().getAll,                        
+                        'lastIdToken': super().getLastIdToken
+                    }
+                    ,super().tokenDAO,MysqlDAOToken
                 ],
         }
 
@@ -358,16 +403,15 @@ class DAOManagerMysql(DAO.DAOManager):
     
     def beginTransaction(self):
 
-        sql = """BEGIN TRANSACTION;"""
+        sql = """START TRANSACTION;"""
         cursor = self.conecction.cursor()
         cursor.execute(sql)
         
     
-    def endTransaction(self,state):
+    def endTransaction(self):
         cursor = self.conecction.cursor()
         try:           
-            if not state:
-                raise Error('problem query')
+            
             sql = """COMMIT;""" 
             cursor.execute(sql)
             return True

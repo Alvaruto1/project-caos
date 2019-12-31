@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block meta %}{% endblock %}
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('vendor.static', filename= 'others/materialize.css') }}">
+    <title>{% block titulo %}{% endblock %}</title>
+</head>
+<body>   
+
+    <nav class="nav-extended">
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo">Practica Login y Tokenización</a>
+            <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                {% block items %} {% endblock %}
+            </ul>
+        </div>            
+    </nav>
+    <ul class="sidenav" id="mobile-demo">
+        {% block items2 %} {% endblock %}        
+    </ul>
+
+    {% block contenido %}{% endblock %}
+   
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="row">
+            {% for message in messages %}
+                <div id='error' class="col s4 offset-s4 z-depth-2 red accent-3" onclick='document.getElementById("error").classList.add("scale-transition");document.getElementById("error").classList.add("scale-out")'>
+                    <div class="col s11">{{ message }}</div>
+                    <div class="col s1" style="cursor:pointer">x</div>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <script src="{{ url_for('vendor.static', filename= 'jquery-3.4.1/jquery-3.4.1.min.js') }}"></script>
+    <script src="{{ url_for('vendor.static', filename= 'others/materialize.js') }}"></script>
+    <script src="{{ url_for('vendor.static', filename= 'others/script.js') }}"></script>
+</body>
+</html>

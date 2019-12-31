@@ -2,26 +2,39 @@ from threading import Timer,Thread,Event
 
 
 # clase que ejecuta una funcion cada cierto tiempo
-class perpetualTimer():
+class PerpetualTimer(object):
 
-    def __init__(self,t):
-        self.t=t
+    __instance = None
+    thread = None
+    params = None    
+
+    def __new__(cls):
+        if PerpetualTimer.__instance is None:            
+            PerpetualTimer.__instance = object.__new__(cls)            
+        return PerpetualTimer.__instance
+
+    def init(self):
+        self.thread = Timer(self.t,self._handleFunction)
+        print('inica'*8)
         
-        self.thread = Timer(self.t,self.handle_function)
+    def setTime(self, time):
+        self.t= time
 
     # anexar funcion qeu sera ejecutada
-    def setFunction(self, hFunction):        
-        self.hFunction = hFunction        
+    def setFunction(self, hFunction, *params):               
+        self.hFunction = hFunction 
+        self.params = params
+           
         
     # ciclo infinito de hilo de ejecucio
-    def handle_function(self):        
-        self.hFunction()
-        self.thread = Timer(self.t,self.handle_function)
-        self.thread.start()
+    def _handleFunction(self):            
+        self.hFunction(*self.params)
+        self.thread = Timer(self.t,self._handleFunction)
+        self.thread.start() 
 
     # inicio de ciclo
-    def start(self):
-        #self.thread.cancel()       
+    def start(self):        
+        self.init()                  
         self.thread.start()
 
     def cancel(self):

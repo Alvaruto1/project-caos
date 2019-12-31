@@ -15,6 +15,7 @@ def start_webapp(mode:str=_DEVELOPMENT, config_dict:dict={}) -> None:
 
     if mode == _DEVELOPMENT:
         os.environ["FLASK_ENV"] = _DEVELOPMENT
+        app.secret_key = os.urandom(12).hex()
         app.run(host="127.0.0.1", port="8080", debug=True)
 
     elif mode == _DEBUG:

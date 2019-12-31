@@ -19,18 +19,25 @@ class DAO(metaclass= abc.ABCMeta):
         pass
     
     @abc.abstractmethod
-    def getAll(self):
-        pass
+    def getAll(self,filter=None):
+        pass    
 
     @abc.abstractmethod
     def queryToObject(self,query):
         pass
 
 class UserDAO(DAO, metaclass=abc.ABCMeta):
-    pass
+    
+    @abc.abstractmethod
+    def existToken(self, token):
+        pass
 
 class TokenDAO(DAO, metaclass=abc.ABCMeta):
-    pass
+       
+    
+    @abc.abstractmethod
+    def getLastIdToken(self):
+        pass
 
 class DAOManager():
 
@@ -42,6 +49,8 @@ class DAOManager():
     DELETE = 'delete'
     GET_ONE = 'getOne'
     GET_ALL = 'getAll'
+    EXIST_TOKEN = 'existToken'
+    LAST_ID_TOKEN = 'lastIdToken'
 
     userDAO = None
     tokenDAO = None
@@ -60,3 +69,9 @@ class DAOManager():
     
     def getAll(self,dao,objectPrimary=None,*args):
         return dao.getAll()
+
+    def existToken(self,dao,objectPrimary,*args):
+        return dao.existToken(objectPrimary)
+
+    def getLastIdToken(self,dao,objectPrimary=None,*args):
+        return dao.getLastIdToken()

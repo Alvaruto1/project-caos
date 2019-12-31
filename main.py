@@ -9,6 +9,11 @@ from src.core import (
     _PRODUCTION,
     _DEVELOPMENT
 )
+from src.utils.temp_toke import PerpetualTimer
+
+perpetualT = PerpetualTimer()
+perpetualT.setTime(10)
+
 
 if __name__ == "__main__":
     start_arguments = sys.argv[1:]
