@@ -70,13 +70,7 @@ class MysqlDAOUser(DAO.UserDAO):
         #self.connection.commit()
         return True
     
-    def update(self,user):
-
-        try:
-            birthDate = datetime.datetime.strptime(user.birthDate, '%d/%m/%y')
-        except (ValueError, AttributeError) as e:
-            print('Error DAOUser update: {}'.format(e))
-            return False
+    def update(self,user):        
 
         try:
             if user.email == '' or user.password == '':
@@ -88,7 +82,7 @@ class MysqlDAOUser(DAO.UserDAO):
             return False        
         
         cursor = self.connection.cursor()
-        dataUser = (user.email, user.password, user.token,)
+        dataUser = (user.email, user.password, user.token.id,user.id)
         sql = """ UPDATE {} SET email=%s, password=%s, idtoken=%s WHERE idusers=%s;""".format(self.table)
 
         try:
@@ -130,7 +124,7 @@ class MysqlDAOUser(DAO.UserDAO):
         
         cursor = self.connection.cursor()
 
-        filterWhere = '' if filter is None else 'WHERE {}'.format(filter)
+        filterWhere = '' if filter is None else "WHERE email LIKE '%{}%'".format(filter)
 
         sql = """ SELECT * FROM {} {};""".format(self.table,filterWhere)
         
