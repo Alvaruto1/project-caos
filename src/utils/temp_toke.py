@@ -14,8 +14,7 @@ class PerpetualTimer(object):
         return PerpetualTimer.__instance
 
     def init(self):
-        self.thread = Timer(self.t,self._handleFunction)
-        print('inica'*8)
+        self.thread = Timer(self.t,self._handleFunction)        
         
     def setTime(self, time):
         self.t= time
@@ -33,9 +32,14 @@ class PerpetualTimer(object):
         self.thread.start() 
 
     # inicio de ciclo
-    def start(self):        
+    def start(self):
+        
+        self.cancel()          
         self.init()                  
         self.thread.start()
 
     def cancel(self):
-        self.thread.cancel()
+        if self.thread: 
+            self.thread.cancel()  
+            print('cancel')
+        

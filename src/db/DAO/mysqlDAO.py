@@ -20,7 +20,7 @@ class MysqlDAOUser(DAO.UserDAO):
             if not mT.do(mT.TOKEN, mT.CREATE, user.token):
                 raise Error('no create token')
                 return False
-            mT.commit()
+            
             #mT.create(user.token)
             idToken = mT.do(mT.TOKEN, mT.LAST_ID_TOKEN)     
             
@@ -126,11 +126,11 @@ class MysqlDAOUser(DAO.UserDAO):
         return user
     
     
-    def getAll(self,filter):
+    def getAll(self,filter = None):
         
         cursor = self.connection.cursor()
 
-        filterWhere = filter == None if '' else 'WHERE {}'
+        filterWhere = '' if filter is None else 'WHERE {}'.format(filter)
 
         sql = """ SELECT * FROM {} {};""".format(self.table,filterWhere)
         
@@ -294,7 +294,7 @@ class MysqlDAOToken(DAO.TokenDAO):
         
         cursor = self.connection.cursor()
         
-        filterWhere = filter == None if '' else 'WHERE {}' 
+        filterWhere = '' if filter == None else 'WHERE {}' 
         
         sql = """ SELECT * FROM {} {};""".format(self.table,filterWhere)
         
@@ -331,10 +331,18 @@ class DAOManagerMysql(DAO.DAOManager):
     """
     DAOManagerSqlite :class manager DAO to sqlite    
     """
+    
+    __instance = None
+
+    def __new__(cls):
+        if DAOManagerMysql.__instance is None:            
+            DAOManagerMysql.__instance = object.__new__(cls)            
+        return DAOManagerMysql.__instance
+    
     daos = None
     conecction = None
 
-    def __init__(self):
+    def init(self):
         
         self.daos = {
             0:
@@ -408,10 +416,11 @@ class DAOManagerMysql(DAO.DAOManager):
         cursor.execute(sql)
         
     
-    def endTransaction(self):
+    def endTransaction(self,state):
         cursor = self.conecction.cursor()
-        try:           
-            
+        try:     
+            if not state:
+                raise Error('failled transaction')
             sql = """COMMIT;""" 
             cursor.execute(sql)
             return True

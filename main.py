@@ -10,10 +10,12 @@ from src.core import (
     _DEVELOPMENT
 )
 from src.utils.temp_toke import PerpetualTimer
+from src.db.DAO.mysqlDAO import DAOManagerMysql
 
 perpetualT = PerpetualTimer()
-perpetualT.setTime(10)
-
+perpetualT.setTime(100)
+d = DAOManagerMysql()
+d.init()
 
 if __name__ == "__main__":
     start_arguments = sys.argv[1:]

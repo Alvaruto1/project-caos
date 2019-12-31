@@ -68,7 +68,7 @@ class DAOManager():
         return dao.getOne(objectPrimary)
     
     def getAll(self,dao,objectPrimary=None,*args):
-        return dao.getAll()
+        return dao.getAll(objectPrimary)
 
     def existToken(self,dao,objectPrimary,*args):
         return dao.existToken(objectPrimary)
