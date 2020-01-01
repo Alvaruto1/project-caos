@@ -33,7 +33,8 @@ def edited():
             user.email = email
             user.password = password
             state = mysqlDM.do(mysqlDM.USER, mysqlDM.UPDATE,user)
-
+            print(state)
+            print('arto'*8)
             if state:
                 mysqlDM.commit()
                 return render_view('home.html',user=user)

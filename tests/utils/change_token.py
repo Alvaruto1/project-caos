@@ -1,7 +1,7 @@
 import datetime
-from src.utils.generate_token import generateToken
-from src.webapp.models.token import Token
-from src.db.DAO.mysqlDAO import DAOManagerMysql
+from tests.utils.generate_token import generateToken
+from tests.webapp.models.token import Token
+from tests.db.DAO.mysqlDAO import DAOManagerMysql
 
 def changeToken(idtoken):  
     print('cambia')  

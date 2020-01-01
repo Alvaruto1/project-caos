@@ -1,4 +1,5 @@
 import unittest, datetime
+from flask import json
 from functools import reduce
 from tests.db.DAO.mysqlDAO import DAOManagerMysql
 from tests.db.DAO.DAO import DAOManager
@@ -6,6 +7,8 @@ from tests.webapp.models.user import User
 from tests.webapp.models.token import Token
 from tests.db.db import create_tables
 from tests.core.web import app, render_view
+from tests.webapp.controllers import *
+from tests.utils.temp_toke import PerpetualTimer
 
 
 class ViewsTestCase(unittest.TestCase):
@@ -13,19 +16,102 @@ class ViewsTestCase(unittest.TestCase):
     def setUp(self):        
         
         app.testing = True
-        self.app = app.test_client(use_cookies=True)                
+        app.secret_key = 'testing_key'
+        self.app = app.test_client(use_cookies=True)
+
+        p = PerpetualTimer()
+        p.setTime(10)          
         self.daoManager = DAOManagerMysql()
-        self.daoManager.init()        
+        self.daoManager.init()
+        
+
         create_tables(self.daoManager.conecction.cursor(),'tests/db/schemas/db_login.sql')
         self.daoManager.commit() 
               
         
 
-    def test_register(self):        
+    def test_register_view(self):        
         
-        res = self.app.post('/')
+        res = self.app.get('/register',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
 
-        print(res)
+        # register user
+        data = {
+            'username':'userRegisterTest',
+            'password':'pas124'
+        }
+        res = self.app.post('/register',follow_redirects=True,data=data)
+        self.assertEqual(res.status_code,200)
+        self.assertIn('<td>userRegisterTest</td>',str(res.data))
+    
+
+
+    def test_sign_in_view(self):        
+        
+        res = self.app.get('/sign_in',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
+
+        # register user
+        data = {
+            'username':'alvaruto18@gmail.com',
+            'password':'123456'
+        }        
+        res = self.app.post('/sign_in',follow_redirects=True,data=data)
+        self.assertEqual(res.status_code,200)
+        self.assertIn('<td>alvaruto18@gmail.com</td>',str(res.data))
+
+
+
+    def test_edit_view(self):        
+        
+        res = self.app.get('/edit',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
+
+        # edit views
+        self.app.set_cookie('127.0.0.1','token','7688377309094510949')
+        
+        res = self.app.get('/edit',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
+        self.assertIn('<h4 class="offset-s3 col s6 center-align">Edit user</h4>',str(res.data))
+
+
+
+    def test_edited_view(self):        
+        
+        res = self.app.get('/edited',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
+
+        # edit user
+        self.app.set_cookie('127.0.0.1','token','7688377309094510949')
+        data = {
+            'username':'alvaruto5@gmail.com',
+            'password':'abcd'
+        } 
+        res = self.app.post('/edited',follow_redirects=True,data=data)
+        self.assertEqual(res.status_code,200)
+        self.assertIn('<td>alvaruto5@gmail.com</td>',str(res.data)) 
+
+
+
+    def test_search_view(self):        
+        
+        res = self.app.get('/search',follow_redirects=True)
+        self.assertEqual(res.status_code,200)
+
+        # search
+        self.app.set_cookie('127.0.0.1','token','7688377309094510949')
+        search = 'gmail'
+        data = {
+            'search':search,
+        } 
+        res = self.app.get('/search',follow_redirects=True,query_string=data)
+        
+        data = json.loads(res.data)        
+        self.assertEqual(res.status_code,200)
+
+        for u in data:
+           self.assertIn(search,u['email'])  
+
     
     def tearDown(self):
 

@@ -408,7 +408,9 @@ class DAOManagerMysql(DAO.DAOManager):
         Keyword Arguments:
             objectPrimary {String} -- item as parameter of dao's method (default: {None})
         """  
-               
+        
+        if daoInt == None:            
+            self.init()
         if self.daos[daoInt][1] == None:
             self.daos[daoInt][1] = self.daos[daoInt][2](self.conecction)
         
