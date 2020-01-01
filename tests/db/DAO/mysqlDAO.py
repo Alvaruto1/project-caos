@@ -197,7 +197,7 @@ class MysqlDAOToken(DAO.TokenDAO):
     def __init__(self,connection):
         self.connection=connection 
     
-    def create(self,token):  
+    def create(self,token): 
 
         try:
             if token is None:
@@ -382,7 +382,7 @@ class DAOManagerMysql(DAO.DAOManager):
                 'host' :'localhost',
                 'user' :'root',
                 'password' : 'rootmysql2019',
-                'database' : 'db_login',
+                'database' : 'db_login_test',
                 'port' : "3306"
             }           
             self.conecction = mysql.connector.connect(**config)         

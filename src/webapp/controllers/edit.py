@@ -1,7 +1,9 @@
 from flask import jsonify,request, flash
 from src.core.web import app, render_view
 from src.db.DAO.mysqlDAO import DAOManagerMysql
+from src.utils.temp_toke import PerpetualTimer
 
+perpetualT = PerpetualTimer()
 
 @app.route('/edit')
 def edit():
@@ -11,7 +13,7 @@ def edit():
     
     if user:            
         return render_view('edit.html',user=user)
-
+    perpetualT.cancel()
     return render_view('sign_in.html')
 
 @app.route('/edited', methods=('POST','GET'))
@@ -40,5 +42,5 @@ def edited():
         user.email = emailB
         user.password = passwordB
         return render_view('home.html',user=user)
-
+    perpetualT.cancel()
     return render_view('sign_in.html')
