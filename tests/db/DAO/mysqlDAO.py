@@ -1,9 +1,9 @@
 import os,datetime, mysql.connector
 from flask import current_app
-import src.db.DAO.DAO as DAO
+import tests.db.DAO.DAO as DAO
 from mysql.connector import Error
-from src.webapp.models.user import User
-from src.webapp.models.token import Token
+from tests.webapp.models.user import User
+from tests.webapp.models.token import Token
 
 class MysqlDAOUser(DAO.UserDAO):
 
@@ -408,7 +408,7 @@ class DAOManagerMysql(DAO.DAOManager):
         Keyword Arguments:
             objectPrimary {String} -- item as parameter of dao's method (default: {None})
         """  
-
+               
         if self.daos[daoInt][1] == None:
             self.daos[daoInt][1] = self.daos[daoInt][2](self.conecction)
         

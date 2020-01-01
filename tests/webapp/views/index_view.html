@@ -1,0 +1,61 @@
+{% extends "layouts/default_layout.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block navbar_title %} Home {% endblock %}
+
+{% block navbar_actions %}
+<button id="navbar-actions"
+    class="mdl-button mdl-js-button mdl-button--icon">
+    <i class="material-icons">more_vert</i>
+</button>
+
+<ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="navbar-actions">
+    <li class="mdl-menu__item">Some Action</li>
+    <li class="mdl-menu__item">Another Action</li>
+    <li disabled class="mdl-menu__item">Disabled Action</li>
+    <li class="mdl-menu__item">Yet Another Action</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <div class="container">
+        <h1 class="display-3">Hello, world!</h1>
+        <p>This is a flask webapp template. It comes with Bootstrap, Material Design Lite, Material Icons, JQuery and Brython preinstalled.</p>
+
+        <div class="container-fluid">
+
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent"
+                onclick="location.href='https://getbootstrap.com/'">
+                Bootstrap
+            </button>
+
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                    onclick="location.href='https://getmdl.io/'">
+                    Material Design Lite
+            </button>
+
+            <button class="mdl-button mdl-js-button mdl-button--raised"
+                    style="color:darkcyan;"
+                    onclick="location.href='https://material.io/tools/icons/?style=baseline'">
+                    Material Icons
+            </button>
+
+
+            <button class="mdl-button mdl-js-button mdl-button--raised"
+                    style="color:dimgrey;"
+                    onclick="location.href='https://jquery.com/'">
+                    JQuery
+            </button>
+
+            <button class="mdl-button mdl-js-button mdl-button--raised"
+                    style="color:dodgerblue;"
+                    onclick="location.href='https://brython.info/'">
+                    Brython
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

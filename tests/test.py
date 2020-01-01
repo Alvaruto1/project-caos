@@ -2,44 +2,30 @@ import unittest, datetime
 from functools import reduce
 from tests.db.DAO.mysqlDAO import DAOManagerMysql
 from tests.db.DAO.DAO import DAOManager
-from src.webapp.models.user import User
-from src.webapp.models.token import Token
+from tests.webapp.models.user import User
+from tests.webapp.models.token import Token
 from tests.db.db import create_tables
-from src.core.web import app, render_view
+from tests.core.web import app, render_view
+
 
 class ViewsTestCase(unittest.TestCase):
 
-    def setUp(self):
-
-        self.app = app
-               
+    def setUp(self):        
+        
+        app.testing = True
+        self.app = app.test_client(use_cookies=True)                
         self.daoManager = DAOManagerMysql()
         self.daoManager.init()        
         create_tables(self.daoManager.conecction.cursor(),'tests/db/schemas/db_login.sql')
-        self.daoManager.commit()        
+        self.daoManager.commit() 
+              
         
 
-    def test_user_creation(self):        
+    def test_register(self):        
         
-        # is nice 
-        token = Token('token3',datetime.datetime.now(),'0')
-        user = User('al@gmail.com','12345',token,'0')
-        res = self.daoManager.do(DAOManager.USER, DAOManager.CREATE,user)
-        self.daoManager.commit()
-        self.assertTrue(res)
+        res = self.app.post('/')
 
-        # no empty fields 
-        token = Token('token2',datetime.datetime.now(),'0')
-        user = User('','',token,'0')
-        res = self.daoManager.do(DAOManager.USER, DAOManager.CREATE,user)
-        self.daoManager.commit()
-        self.assertFalse(res)
-
-        # user equal None 
-        user = None
-        res = self.daoManager.do(DAOManager.USER, DAOManager.CREATE,user)
-        self.daoManager.commit()
-        self.assertFalse(res)
+        print(res)
     
     def tearDown(self):
 
@@ -216,3 +202,4 @@ class UserTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    

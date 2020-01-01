@@ -1,0 +1,2 @@
+class ConfigDictionary(Exception):
+    pass
