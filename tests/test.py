@@ -32,8 +32,11 @@ class ViewsTestCase(unittest.TestCase):
 
     def test_register_view(self):        
         
+        # no inico de sesion
         res = self.app.get('/register',follow_redirects=True)
         self.assertEqual(res.status_code,200)
+        self.assertIn('Registrarse',str(res.data))
+        
 
         # register user
         data = {
@@ -48,8 +51,11 @@ class ViewsTestCase(unittest.TestCase):
 
     def test_sign_in_view(self):        
         
+        # no inico de sesion
         res = self.app.get('/sign_in',follow_redirects=True)
         self.assertEqual(res.status_code,200)
+        self.assertIn('<h4 class="col s12 center-align">Inicio Sesi',str(res.data))
+
 
         # register user
         data = {
@@ -64,8 +70,11 @@ class ViewsTestCase(unittest.TestCase):
 
     def test_edit_view(self):        
         
+        # no inico de sesion
         res = self.app.get('/edit',follow_redirects=True)
         self.assertEqual(res.status_code,200)
+        self.assertIn('<h4 class="col s12 center-align">Inicio Sesi',str(res.data))
+
 
         # edit views
         self.app.set_cookie('127.0.0.1','token','7688377309094510949')
@@ -78,8 +87,10 @@ class ViewsTestCase(unittest.TestCase):
 
     def test_edited_view(self):        
         
+        # no inico de sesion
         res = self.app.get('/edited',follow_redirects=True)
         self.assertEqual(res.status_code,200)
+        self.assertIn('<h4 class="col s12 center-align">Inicio Sesi',str(res.data))
 
         # edit user
         self.app.set_cookie('127.0.0.1','token','7688377309094510949')
@@ -95,8 +106,10 @@ class ViewsTestCase(unittest.TestCase):
 
     def test_search_view(self):        
         
+        # no inico de sesion
         res = self.app.get('/search',follow_redirects=True)
         self.assertEqual(res.status_code,200)
+        self.assertIn('<h4 class="col s12 center-align">Inicio Sesi',str(res.data))
 
         # search
         self.app.set_cookie('127.0.0.1','token','7688377309094510949')
@@ -110,7 +123,9 @@ class ViewsTestCase(unittest.TestCase):
         self.assertEqual(res.status_code,200)
 
         for u in data:
-           self.assertIn(search,u['email'])  
+           self.assertIn(search,u['email'])
+
+          
 
     
     def tearDown(self):
